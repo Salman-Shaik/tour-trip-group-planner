@@ -1,0 +1,12 @@
+"use client";
+
+import { useState } from "react";
+import { Plus, X } from "lucide-react";
+
+export function TagPicker({ name, initialValue, suggestions, placeholder }: { name:string; initialValue?:string; suggestions:readonly string[]; placeholder:string }) {
+  const [items,setItems]=useState(()=>initialValue?.split(",").map((item)=>item.trim()).filter(Boolean) ?? []);
+  const [draft,setDraft]=useState("");
+  const add=(raw:string)=>{const item=raw.trim().replace(/,+$/g,"");if(!item||items.some((current)=>current.toLowerCase()===item.toLowerCase()))return;setItems((current)=>[...current,item].slice(0,20));setDraft("");};
+  const remove=(item:string)=>setItems((current)=>current.filter((value)=>value!==item));
+  return <div><input type="hidden" name={name} value={items.join(", ")}/><div className="flex min-h-12 flex-wrap items-center gap-2 rounded-xl border border-[#dcded8] bg-white p-2 focus-within:border-[#1f7168] focus-within:ring-4 focus-within:ring-[#1f7168]/10">{items.map((item)=><span key={item} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-[#e7f1ed] pl-3 pr-1.5 text-sm font-bold text-[#285f54]">{item}<button type="button" onClick={()=>remove(item)} aria-label={`Remove ${item}`} className="grid size-7 place-items-center rounded-full hover:bg-[#d3e7df]"><X size={13}/></button></span>)}<input value={draft} onChange={(event)=>setDraft(event.target.value)} onKeyDown={(event)=>{if(event.key==="Enter"||event.key===","){event.preventDefault();add(draft);}if(event.key==="Backspace"&&!draft&&items.length)remove(items.at(-1)!);}} onBlur={()=>add(draft)} className="min-h-8 min-w-36 flex-1 bg-transparent px-1 text-[16px] outline-none placeholder:text-[#9aa5a1]" placeholder={items.length ? "Add another…" : placeholder}/><button type="button" onClick={()=>add(draft)} disabled={!draft.trim()} className="grid size-8 place-items-center rounded-lg text-[#1f7168] hover:bg-[#e7f1ed] disabled:opacity-30" aria-label={`Add ${name}`}><Plus size={16}/></button></div><div className="mt-2 flex flex-wrap gap-1.5">{suggestions.filter((suggestion)=>!items.some((item)=>item.toLowerCase()===suggestion.toLowerCase())).map((suggestion)=><button key={suggestion} type="button" onClick={()=>add(suggestion)} className="min-h-8 rounded-full border border-[#dfe3df] bg-[#fafaf7] px-2.5 text-xs font-semibold text-[#5d6d68] transition hover:border-[#a8c6bc] hover:bg-[#eef6f2]">+ {suggestion}</button>)}</div></div>;
+}

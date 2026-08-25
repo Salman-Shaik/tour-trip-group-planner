@@ -1,0 +1,9 @@
+import { redirect,notFound } from "next/navigation";
+import { MapPin,Users } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
+import { JoinForm } from "@/components/participant/JoinForm";
+import { readDatabase } from "@/lib/db";
+import { formatTripDates } from "@/lib/format";
+import { getCurrentParticipant } from "@/lib/participant-session";
+
+export default async function JoinPage({params}:{params:Promise<{tripId:string}>}){const{tripId}=await params;const database=await readDatabase();const trip=database.trips.find((item)=>item.inviteCode===tripId);if(!trip)notFound();if(await getCurrentParticipant(trip,database))redirect(`/trip/${tripId}`);return <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_85%_10%,#d8ece7,transparent_30%),radial-gradient(circle_at_10%_90%,#f7dacb,transparent_32%),#fbfaf7] px-4 py-10"><section className="w-full max-w-lg rounded-[2rem] border border-[#e8e2d8] bg-white p-6 shadow-[0_24px_80px_rgba(35,61,55,.12)] sm:p-10"><div className="flex justify-center"><Logo/></div><div className="mt-8 text-center"><p className="text-sm font-bold text-[#e85d3f]">You’re invited</p><h1 className="display-font mt-2 text-4xl font-medium tracking-[-.03em] sm:text-5xl">{trip.name}</h1><div className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-[#63716d]"><span className="flex items-center gap-1.5"><MapPin size={15}/>{trip.destination}</span><span>{formatTripDates(trip.startDate,trip.endDate)}</span><span className="flex items-center gap-1.5"><Users size={15}/>{trip.travellerCount} travellers</span></div><p className="mx-auto mt-5 max-w-sm leading-7 text-[#63716d]">Join the shortlist to vote on stays. No password or account needed.</p></div><div className="mt-8"><JoinForm inviteCode={tripId}/></div></section></main>}

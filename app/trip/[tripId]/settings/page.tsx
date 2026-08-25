@@ -1,0 +1,16 @@
+import { notFound,redirect } from "next/navigation";
+import { Archive,CheckCircle2,RotateCcw,Settings } from "lucide-react";
+import { setTripCompleted } from "@/actions/settings";
+import { DeleteTripButton } from "@/components/trip/DeleteTripButton";
+import { TripHeader } from "@/components/trip/TripHeader";
+import { TripNavigation } from "@/components/trip/TripNavigation";
+import { TripSettingsForm } from "@/components/trip/TripSettingsForm";
+import { isTripCreator } from "@/lib/creator-session";
+import { readDatabase } from "@/lib/db";
+import { getTripLifecycle } from "@/lib/trip-lifecycle";
+
+export default async function SettingsPage({params}:{params:Promise<{tripId:string}>}){
+  const{tripId}=await params;const database=await readDatabase();const trip=database.trips.find((item)=>item.inviteCode===tripId);if(!trip)notFound();if(!(await isTripCreator(trip)))redirect(`/trip/${tripId}`);
+  const lifecycle=getTripLifecycle(trip);const toggle=setTripCompleted.bind(null,tripId,lifecycle!=="COMPLETED");
+  return <main className="min-h-screen"><TripHeader trip={trip} isCreator/><TripNavigation inviteCode={tripId} active="settings" isCreator/><section className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:px-8 lg:grid-cols-[1fr_.65fr] lg:px-12"><div><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-[#e7f1ed] text-[#1f7168]"><Settings size={21}/></span><div><p className="text-sm font-bold uppercase tracking-[.15em] text-[#1f7168]">Creator controls</p><h1 className="display-font text-4xl">Trip settings</h1></div></div><div className="mt-7 rounded-[2rem] border border-[#e3e0d8] bg-white p-5 sm:p-8"><TripSettingsForm trip={trip}/></div></div><aside className="rounded-[2rem] border border-[#e3e0d8] bg-white p-6 lg:mt-20"><Archive className="text-[#e85d3f]"/><h2 className="mt-4 text-xl font-extrabold">Trip lifecycle</h2><p className="mt-2 text-sm leading-6 text-[#63716d]">Current state: <strong>{lifecycle.toLowerCase()}</strong>. Trips move to Past automatically after their end date. Marking one Completed records your confirmation and moves it into its own section on home.</p><form action={toggle}><button className={`mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full px-5 text-sm font-bold ${lifecycle==="COMPLETED"?"border border-[#cfd8d4]":"bg-[#1f7168] text-white"}`}>{lifecycle==="COMPLETED"?<><RotateCcw size={17}/>Reopen trip</>:<><CheckCircle2 size={17}/>Mark as completed</>}</button></form><div className="my-6 border-t border-[#e8e2d8]"/><h2 className="text-lg font-extrabold text-[#8f2f20]">Danger zone</h2><p className="mb-4 mt-1 text-sm leading-6 text-[#63716d]">Delete this trip and all of its planning data.</p><DeleteTripButton inviteCode={tripId} tripName={trip.name}/></aside></section></main>;
+}

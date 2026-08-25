@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+
+echo "Running unit tests with the 93% coverage gate before push..."
+npm run test:coverage
