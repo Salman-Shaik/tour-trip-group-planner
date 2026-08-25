@@ -50,6 +50,46 @@ JSON storage is intended for local development and a single Node.js process. It 
 
 To run an optimized local build, use `npm run build` and `npm start`.
 
+## Single-instance production deployment
+
+Roamly supports production on one Node.js process with a persistent writable `data/` directory. It must not be deployed to serverless functions or scaled to multiple replicas while using JSON storage.
+
+Set these production variables in the host or `.env`:
+
+```env
+AUTH_SECRET=<at least 32 random characters>
+AUTH_GOOGLE_ID=<Google OAuth client ID>
+AUTH_GOOGLE_SECRET=<Google OAuth client secret>
+AUTH_URL=https://your-domain.example
+AUTH_TRUST_HOST=true
+```
+
+On first startup, you can optionally initialize from a downloaded Roamly JSON backup:
+
+```env
+ROAMLY_DB_IMPORT_PATH=/absolute/path/to/roamly-backup.json
+```
+
+If no import file is supplied, startup creates the default empty database template. If `data/db.json` already exists, startup never imports or overwrites anything. Remove `ROAMLY_DB_IMPORT_PATH` after the first successful import.
+
+Creators can download a trip backup from **Trip Settings → Backup**. The file contains participant and account-related data and must be handled as private data.
+
+Run directly after building:
+
+```bash
+npm ci
+npm run build
+npm start
+```
+
+Or deploy the container with a persistent named volume:
+
+```bash
+docker compose up --build -d
+```
+
+The health endpoint is `/api/health`. Back up the persistent `data/db.json` file regularly and test restoration before relying on backups. A managed host must attach persistent storage at `/app/data` when using the production container.
+
 ## Delivery status
 
 Phases 1–5 are complete. The app includes the responsive visual foundation, typed JSON data layer, validated trip creation, secure creator and participant cookies, shareable trip dashboards, creator-only accommodation management, passwordless participant joining, immediate voting, property discussions, side-by-side comparison, personal preferences, weighted recommendations, and final stay selection.
