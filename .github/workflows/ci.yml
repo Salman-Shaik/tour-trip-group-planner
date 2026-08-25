@@ -5,6 +5,7 @@ on:
     branches: [main]
 permissions:
   contents: read
+  packages: write
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -32,3 +33,74 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+  package:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [quality, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: image
+        shell: bash
+        run: |
+          echo "base=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "name=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}
+            ${{ steps.image.outputs.base }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: oracle-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.ORACLE_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.ORACLE_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      - name: Upload deployment configuration
+        env:
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+        run: |
+          ssh "$ORACLE_USER@$ORACLE_HOST" 'mkdir -p /opt/roamly/backups /opt/roamly/bootstrap'
+          scp compose.oracle.yaml Caddyfile scripts/deploy-oracle.sh "$ORACLE_USER@$ORACLE_HOST:/opt/roamly/"
+      - name: Authenticate host to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+        run: printf '%s' "$GHCR_TOKEN" | ssh "$ORACLE_USER@$ORACLE_HOST" "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+      - name: Deploy with backup and rollback
+        env:
+          IMAGE: ${{ needs.package.outputs.image }}
+          ORACLE_HOST: ${{ secrets.ORACLE_HOST }}
+          ORACLE_USER: ${{ secrets.ORACLE_USER }}
+        run: ssh "$ORACLE_USER@$ORACLE_HOST" "chmod +x /opt/roamly/deploy-oracle.sh && /opt/roamly/deploy-oracle.sh '$IMAGE'"

@@ -8,8 +8,8 @@ import { initialFormState, type FormState } from "@/lib/form-state";
 import { currencies, listingPlatforms, type Listing, type ListingPlatform } from "@/lib/types";
 
 const platformLabels:Record<ListingPlatform,string>={AIRBNB:"Airbnb",BOOKING:"Booking.com",AGODA:"Agoda",MAKEMYTRIP:"MakeMyTrip",GOIBIBO:"Goibibo",DIRECT:"Direct website",OTHER:"Other"};
-const amenitySuggestions=["Swimming Pool","Wi-Fi","Parking","Kitchen","Breakfast","Beach Access","Air Conditioning","Washing Machine","Pet Friendly","Private Property","Balcony","Sea View"];
-const tagSuggestions=["Easy travel","Hard travel","Far","Too close","Cheap","Comfy","Expensive","Good value","Great location","Group-friendly"];
+const amenitySuggestions=["Swimming Pool","Wi-Fi","Parking","Kitchen","Breakfast","BBQ","TV","Beach Access","Air Conditioning","Washing Machine","Pet Friendly","Private Property","Balcony","Sea View","Hot Tub","Gym","Workspace","Power Backup","Elevator","Housekeeping","Garden","Fireplace"];
+const tagSuggestions=["Easy travel","Hard travel","Far","Too close","Cheap","Comfy","Expensive","Good value","Great location","Group-friendly","Family-friendly","Party-friendly","Quiet","Central","Remote","Scenic","Spacious","Cramped","Luxury","Best rated","Flexible cancellation","Non-refundable"];
 const distanceSuggestions=["Walking distance","Under 10 min drive","10–20 min drive","30+ min drive","Near the beach","Near the airport","Far from the centre"];
 function detectPlatform(value:string):ListingPlatform|null{try{const host=new URL(value).hostname.toLowerCase();if(host.includes("airbnb."))return"AIRBNB";if(host.includes("booking.com"))return"BOOKING";if(host.includes("agoda."))return"AGODA";if(host.includes("makemytrip.com"))return"MAKEMYTRIP";if(host.includes("goibibo.com"))return"GOIBIBO";return"OTHER";}catch{return null;}}
 type ListingAction=(state:FormState,formData:FormData)=>Promise<FormState>;

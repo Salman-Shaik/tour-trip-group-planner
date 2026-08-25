@@ -90,6 +90,8 @@ docker compose up --build -d
 
 The health endpoint is `/api/health`. Back up the persistent `data/db.json` file regularly and test restoration before relying on backups.
 
+For the complete Oracle Cloud CI/CD setup, including DNS, HTTPS, GitHub secrets, automatic backups, health-gated releases, and rollback, see [docs/oracle-deployment.md](docs/oracle-deployment.md).
+
 ## Delivery status
 
 Phases 1–5 are complete. The app includes the responsive visual foundation, typed JSON data layer, validated trip creation, secure creator and participant cookies, shareable trip dashboards, creator-only accommodation management, passwordless participant joining, immediate voting, property discussions, side-by-side comparison, personal preferences, weighted recommendations, and final stay selection.
