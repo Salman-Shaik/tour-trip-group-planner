@@ -15,9 +15,16 @@ function normalizeDatabase(value:Partial<Database>):Database {
   return { ...emptyDatabase(), ...value, users:value.users ?? [], trips:(value.trips ?? []).map((trip) => ({ ...trip, creatorUserId:trip.creatorUserId ?? null, creatorTokenHash:trip.creatorTokenHash ?? "", status:trip.status ?? "ACTIVE", completedAt:trip.completedAt ?? null })) };
 }
 
+export function parseDatabaseDocument(value:unknown):Database {
+  if(!value||typeof value!=="object"||Array.isArray(value))throw new Error("Database JSON must be an object.");
+  const record=value as Record<string,unknown>;const required=Object.keys(emptyDatabase()) as Array<keyof Database>;
+  for(const key of required)if(record[key]!==undefined&&!Array.isArray(record[key]))throw new Error(`Database field "${key}" must be an array.`);
+  return normalizeDatabase(record as Partial<Database>);
+}
+
 export async function readDatabase(): Promise<Database> {
   try {
-    return normalizeDatabase(JSON.parse(await readFile(databasePath, "utf8")) as Partial<Database>);
+    return parseDatabaseDocument(JSON.parse(await readFile(databasePath, "utf8")));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return emptyDatabase();
     throw error;
