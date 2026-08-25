@@ -64,13 +64,25 @@ AUTH_URL=https://your-domain.example
 AUTH_TRUST_HOST=true
 ```
 
-On first startup, you can optionally initialize from a downloaded Roamly JSON backup:
+On first startup outside Docker, you can optionally initialize from a downloaded Roamly JSON backup:
 
 ```env
 ROAMLY_DB_IMPORT_PATH=/absolute/path/to/roamly-backup.json
 ```
 
 If no import file is supplied, startup creates the default empty database template. If `data/db.json` already exists, startup never imports or overwrites anything. Remove `ROAMLY_DB_IMPORT_PATH` after the first successful import.
+
+For Docker Compose, host paths are not visible inside the container. Put the backup in the repository's ignored `imports/` directory, configure the container path, and then start Compose:
+
+```bash
+cp /path/to/roamly-backup.json imports/initial.json
+```
+
+```env
+ROAMLY_DB_IMPORT_PATH=/imports/initial.json
+```
+
+Compose mounts `./imports` read-only at `/imports`. Import occurs only when the persistent `roamly-data` volume does not already contain `db.json`.
 
 Creators can download a trip backup from **Trip Settings → Backup**. The file contains participant and account-related data and must be handled as private data.
 
@@ -88,7 +100,7 @@ Or deploy the container with a persistent named volume:
 docker compose up --build -d
 ```
 
-The health endpoint is `/api/health`. Back up the persistent `data/db.json` file regularly and test restoration before relying on backups. A managed host must attach persistent storage at `/app/data` when using the production container.
+The health endpoint is `/api/health`. Back up the persistent `data/db.json` file regularly and test restoration before relying on backups. A managed host must attach persistent storage at `/app/data` when using the production container. On Railway, create a Railway Volume and set its mount path to `/app/data`; the Dockerfile intentionally does not declare `VOLUME` because Railway manages persistent volumes through the service configuration.
 
 ## Delivery status
 

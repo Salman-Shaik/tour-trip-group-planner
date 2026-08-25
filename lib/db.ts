@@ -15,10 +15,33 @@ function normalizeDatabase(value:Partial<Database>):Database {
   return { ...emptyDatabase(), ...value, users:value.users ?? [], trips:(value.trips ?? []).map((trip) => ({ ...trip, creatorUserId:trip.creatorUserId ?? null, creatorTokenHash:trip.creatorTokenHash ?? "", status:trip.status ?? "ACTIVE", completedAt:trip.completedAt ?? null })) };
 }
 
+const requiredRecordFields:Record<keyof Database,readonly string[]>={
+  users:["id","googleSubject","email","name","imageUrl","createdAt","updatedAt"],
+  trips:["id","inviteCode","name","destination","startDate","endDate","travellerCount","accommodationBudget","currency","selectedListingId","createdAt","updatedAt"],
+  participants:["id","tripId","name","sessionHash","createdAt","updatedAt"],
+  listings:["id","tripId","url","platform","propertyName","imageUrl","totalPrice","currency","maxGuests","bedrooms","beds","bathrooms","rating","reviewCount","location","distanceNote","notes","tags","createdAt","updatedAt"],
+  amenities:["id","key","label"],
+  listingAmenities:["listingId","amenityId"],
+  votes:["id","participantId","listingId","value","createdAt","updatedAt"],
+  comments:["id","participantId","listingId","body","createdAt","updatedAt"],
+  preferences:["id","key","label","description","createdAt"],
+  participantPreferences:["participantId","preferenceId","importance","createdAt","updatedAt"],
+};
+
 export function parseDatabaseDocument(value:unknown):Database {
   if(!value||typeof value!=="object"||Array.isArray(value))throw new Error("Database JSON must be an object.");
   const record=value as Record<string,unknown>;const required=Object.keys(emptyDatabase()) as Array<keyof Database>;
-  for(const key of required)if(record[key]!==undefined&&!Array.isArray(record[key]))throw new Error(`Database field "${key}" must be an array.`);
+  for(const key of required){
+    const entries=record[key];
+    if(entries===undefined)continue;
+    if(!Array.isArray(entries))throw new Error(`Database field "${key}" must be an array.`);
+    entries.forEach((entry,index)=>{
+      const location=`${key}[${index}]`;
+      if(!entry||typeof entry!=="object"||Array.isArray(entry))throw new Error(`Database entry "${location}" must be an object.`);
+      const item=entry as Record<string,unknown>;
+      for(const field of requiredRecordFields[key])if(!(field in item))throw new Error(`Database entry "${location}" is missing required field "${field}".`);
+    });
+  }
   return normalizeDatabase(record as Partial<Database>);
 }
 
