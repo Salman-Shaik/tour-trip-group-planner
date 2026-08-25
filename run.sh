@@ -1,4 +1,9 @@
+#!/bin/sh
+set -eu
+
 npm install
-Copy-Item .env.example .env
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
 npm run db:seed
 npm run dev

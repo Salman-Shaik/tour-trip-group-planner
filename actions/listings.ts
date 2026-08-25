@@ -8,6 +8,7 @@ import { readDatabase, updateDatabase } from "@/lib/db";
 import { formValues, type FormState } from "@/lib/form-state";
 import { parseListingUrl } from "@/lib/listing-parser";
 import { listingSchema } from "@/lib/validation";
+import { amenityKey } from "@/lib/amenity-key";
 
 function amenityLabels(value:string) {
   return [...new Set(value.split(",").map((item) => item.trim()).filter(Boolean))].slice(0, 20);
@@ -31,7 +32,7 @@ export async function addListing(inviteCode:string, _state:FormState, formData:F
   await updateDatabase((database) => {
     database.listings.push({ id:listingId,tripId:trip.id,url:normalized.normalizedUrl,platform:parsed.data.platform,propertyName:parsed.data.propertyName,imageUrl:parsed.data.imageUrl || null,totalPrice:parsed.data.totalPrice,currency:parsed.data.currency,maxGuests:parsed.data.maxGuests,bedrooms:parsed.data.bedrooms ?? null,beds:parsed.data.beds ?? null,bathrooms:parsed.data.bathrooms ?? null,rating:parsed.data.rating ?? null,reviewCount:parsed.data.reviewCount ?? null,location:parsed.data.location,distanceNote:parsed.data.distanceNote || null,notes:parsed.data.notes || null,tags:amenityLabels(parsed.data.tags),createdAt:now,updatedAt:now });
     for (const label of amenityLabels(parsed.data.amenities)) {
-      const key = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const key = amenityKey(label);
       let amenity = database.amenities.find((item) => item.key === key);
       if (!amenity) { amenity = { id:randomUUID(),key,label }; database.amenities.push(amenity); }
       database.listingAmenities.push({ listingId,amenityId:amenity.id });
@@ -53,7 +54,7 @@ export async function editListing(inviteCode:string, listingId:string, _state:Fo
     Object.assign(listing, { url:normalized.normalizedUrl,platform:parsed.data.platform,propertyName:parsed.data.propertyName,imageUrl:parsed.data.imageUrl || null,totalPrice:parsed.data.totalPrice,currency:parsed.data.currency,maxGuests:parsed.data.maxGuests,bedrooms:parsed.data.bedrooms ?? null,beds:parsed.data.beds ?? null,bathrooms:parsed.data.bathrooms ?? null,rating:parsed.data.rating ?? null,reviewCount:parsed.data.reviewCount ?? null,location:parsed.data.location,distanceNote:parsed.data.distanceNote || null,notes:parsed.data.notes || null,tags:amenityLabels(parsed.data.tags),updatedAt:new Date().toISOString() });
     database.listingAmenities = database.listingAmenities.filter((item) => item.listingId !== listingId);
     for (const label of amenityLabels(parsed.data.amenities)) {
-      const key = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const key = amenityKey(label);
       let amenity = database.amenities.find((item) => item.key === key);
       if (!amenity) { amenity = { id:randomUUID(),key,label }; database.amenities.push(amenity); }
       database.listingAmenities.push({ listingId,amenityId:amenity.id });
