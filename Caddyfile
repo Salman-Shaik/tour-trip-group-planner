@@ -1,5 +1,0 @@
-{$ROAMLY_DOMAIN} {
-  encode zstd gzip
-  reverse_proxy roamly:3000
-  header -Server
-}

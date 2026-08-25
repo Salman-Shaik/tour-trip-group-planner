@@ -88,9 +88,7 @@ Or deploy the container with a persistent named volume:
 docker compose up --build -d
 ```
 
-The health endpoint is `/api/health`. Back up the persistent `data/db.json` file regularly and test restoration before relying on backups.
-
-For the complete Oracle Cloud CI/CD setup, including DNS, HTTPS, GitHub secrets, automatic backups, health-gated releases, and rollback, see [docs/oracle-deployment.md](docs/oracle-deployment.md).
+The health endpoint is `/api/health`. Back up the persistent `data/db.json` file regularly and test restoration before relying on backups. A managed host must attach persistent storage at `/app/data` when using the production container.
 
 ## Delivery status
 
