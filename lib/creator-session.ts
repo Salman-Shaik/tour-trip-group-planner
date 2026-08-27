@@ -24,7 +24,9 @@ export async function isTripCreator(trip:Trip) {
 export async function getCreatorTrips(database:Database) {
   const session=await auth();
   const store=await cookies();
+  const joinedTripIds=new Set(session?.user.id?database.participants.filter((participant)=>participant.userId===session.user.id).map((participant)=>participant.tripId):[]);
   return database.trips.filter((trip)=>{
+    if(joinedTripIds.has(trip.id))return true;
     if(session?.user.id && trip.creatorUserId===session.user.id)return true;
     const token=store.get(cookieName(trip.id))?.value;
     if(!token)return false;

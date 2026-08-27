@@ -1,0 +1,27 @@
+# Firebase App Hosting runtime settings.
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 20
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: ROAMLY_DB_BACKEND
+    value: firestore
+    availability:
+      - RUNTIME
+  - variable: ROAMLY_FIRESTORE_COLLECTION
+    value: roamly_internal
+    availability:
+      - RUNTIME
+  - variable: AUTH_TRUST_HOST
+    value: "true"
+    availability:
+      - RUNTIME
+  - variable: AUTH_SECRET
+    secret: roamlyAuthSecret
+  - variable: AUTH_GOOGLE_ID
+    secret: roamlyGoogleClientId
+  - variable: AUTH_GOOGLE_SECRET
+    secret: roamlyGoogleClientSecret

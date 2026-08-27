@@ -39,7 +39,10 @@ test("ten participants vote and the creator selects the group result",async({bro
   await page.goto("/");
   await page.getByRole("button",{name:/Open as creator/}).click();
   await page.locator('a[href$="/participants"]:visible').first().click();
-  await expect(page.getByText("10 joined",{exact:true})).toBeVisible();
+  await expect(page.getByText("10/10 joined",{exact:true})).toBeVisible();
+
+  await page.locator('a[href$="/settings"]:visible').first().click();
+  await page.getByRole("button",{name:"Lock voting now"}).click();
 
   await page.locator('a[href$="/results"]:visible').first().click();
   await expect(page.getByText("10 participants",{exact:true})).toBeVisible();
