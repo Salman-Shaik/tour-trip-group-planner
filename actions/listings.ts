@@ -9,6 +9,7 @@ import { formValues, type FormState } from "@/lib/form-state";
 import { parseListingUrl } from "@/lib/listing-parser";
 import { listingSchema } from "@/lib/validation";
 import { amenityKey } from "@/lib/amenity-key";
+import { fetchListingMetadata } from "@/lib/listing-metadata";
 
 function amenityLabels(value:string) {
   return [...new Set(value.split(",").map((item) => item.trim()).filter(Boolean))].slice(0, 20);
@@ -19,6 +20,8 @@ async function creatorTrip(inviteCode:string) {
   if (!trip || !(await isTripCreator(trip))) return null;
   return trip;
 }
+
+export async function importListingMetadata(inviteCode:string,url:string){const trip=await creatorTrip(inviteCode);if(!trip)return{ok:false as const,message:"Only the trip creator can import listing details."};try{return{ok:true as const,metadata:await fetchListingMetadata(url)}}catch(error){return{ok:false as const,message:error instanceof Error?error.message:"The listing could not be imported. Enter its details manually."}}}
 
 export async function addListing(inviteCode:string, _state:FormState, formData:FormData): Promise<FormState> {
   const trip = await creatorTrip(inviteCode);
@@ -78,4 +81,10 @@ export async function deleteListing(inviteCode:string, listingId:string) {
     if (trip.selectedListingId === listingId) trip.selectedListingId = null;
   });
   revalidatePath(`/trip/${inviteCode}`);
+}
+
+export async function reuseListing(inviteCode:string,sourceListingId:string){
+  const trip=await creatorTrip(inviteCode);if(!trip)return;const now=new Date().toISOString();
+  await updateDatabase((database)=>{const source=database.listings.find((item)=>item.id===sourceListingId);const sourceTrip=source&&database.trips.find((item)=>item.id===source.tripId);if(!source||!sourceTrip||sourceTrip.creatorUserId!==trip.creatorUserId||sourceTrip.id===trip.id||sourceTrip.selectedListingId===source.id)return;const listingId=randomUUID();database.listings.push({...source,id:listingId,tripId:trip.id,createdAt:now,updatedAt:now});const amenityIds=database.listingAmenities.filter((item)=>item.listingId===source.id).map((item)=>item.amenityId);database.listingAmenities.push(...amenityIds.map((amenityId)=>({listingId,amenityId})));});
+  revalidatePath(`/trip/${inviteCode}`);redirect(`/trip/${inviteCode}`);
 }

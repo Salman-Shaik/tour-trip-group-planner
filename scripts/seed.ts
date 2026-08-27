@@ -25,7 +25,7 @@ async function main() {
   const preferences=preferenceLabels.map((label,index) => ({ id:`preference_${index + 1}`,key:slug(label),label,description:null,createdAt:now }));
   const database: Database = {
     users:[],
-    trips:[{ id:tripId,inviteCode:SEEDED_TRIP_INVITE_CODE,name:"Goa December Trip",destination:"North Goa",startDate:"2026-12-12",endDate:"2026-12-15",travellerCount:8,accommodationBudget:40000,currency:"INR",creatorUserId:null,creatorTokenHash:hash(SEEDED_CREATOR_TOKEN),status:"ACTIVE",completedAt:null,selectedListingId:null,createdAt:now,updatedAt:now }],
+    trips:[{ id:tripId,inviteCode:SEEDED_TRIP_INVITE_CODE,name:"Goa December Trip",destination:"North Goa",startDate:"2026-12-12",endDate:"2026-12-15",travellerCount:10,accommodationBudget:40000,currency:"INR",creatorUserId:null,creatorTokenHash:hash(SEEDED_CREATOR_TOKEN),status:"ACTIVE",completedAt:null,selectedListingId:null,createdAt:now,updatedAt:now }],
     participants,
     listings,
     amenities,

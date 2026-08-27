@@ -1,0 +1,55 @@
+# Firebase App Hosting runtime settings.
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 20
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: ROAMLY_DB_BACKEND
+    value: firestore
+    availability:
+      - RUNTIME
+  - variable: ROAMLY_FIRESTORE_COLLECTION
+    value: roamly_internal
+    availability:
+      - RUNTIME
+  - variable: AUTH_TRUST_HOST
+    value: "true"
+    availability:
+      - RUNTIME
+  - variable: AUTH_SECRET
+    secret: roamlyAuthSecret
+  - variable: AUTH_GOOGLE_ID
+    secret: roamlyGoogleClientId
+  - variable: AUTH_GOOGLE_SECRET
+    secret: roamlyGoogleClientSecret
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyBuaI_h-fpmt3xyrY6VHKm_pjIq7grvFtQ
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: roamly-c07c3.firebaseapp.com
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: roamly-c07c3
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: roamly-c07c3.firebasestorage.app
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "458854030278"
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: 1:458854030278:web:fa210e468945073f1cb0c7
+    availability:
+      - BUILD
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-8S3J5SB3B1
+    availability:
+      - BUILD

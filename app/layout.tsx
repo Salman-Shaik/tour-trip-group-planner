@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Newsreader } from "next/font/google";
+import { FirebaseAnalytics } from "@/components/analytics/FirebaseAnalytics";
 import { TabletAvailability } from "@/components/layout/TabletAvailability";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import "./globals.css";
@@ -10,5 +11,5 @@ export const metadata: Metadata = { title:"Roamly — Decide together, travel be
 export const viewport: Viewport = { width:"device-width", initialScale:1, viewportFit:"cover", themeColor:"#fbfaf7" };
 
 export default function RootLayout({ children }: Readonly<{ children:React.ReactNode }>) {
-  return <html lang="en" suppressHydrationWarning><body className={`${sans.variable} ${display.variable}`}><div className="app-content">{children}</div><TabletAvailability/><ThemeToggle/></body></html>;
+  return <html lang="en" suppressHydrationWarning><body className={`${sans.variable} ${display.variable}`}><div className="app-content">{children}</div><TabletAvailability/><ThemeToggle/><FirebaseAnalytics/></body></html>;
 }

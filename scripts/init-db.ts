@@ -1,10 +1,11 @@
 import { access,readFile } from "node:fs/promises";
 import path from "node:path";
-import { emptyDatabase,parseDatabaseDocument,writeDatabase } from "../lib/db.ts";
+import { emptyDatabase,parseDatabaseDocument,readDatabase,writeDatabase } from "../lib/db.ts";
 
 const databasePath=path.join(process.cwd(),"data","db.json");
 
 async function main(){
+  if(process.env.ROAMLY_DB_BACKEND?.toLowerCase()==="firestore"){await readDatabase();console.log("Firestore database connection verified; initialization is managed through the migration command.");return;}
   try{
     await access(databasePath);
     console.log("Database already exists; leaving data/db.json unchanged.");

@@ -1,18 +1,21 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { Database } from "@/lib/types";
+import { defaultPreferences } from "./defaults.ts";
+import { readFirestoreDatabase,updateFirestoreDatabase,writeFirestoreDatabase } from "./firestore-db.ts";
 
 const dataDirectory = path.join(process.cwd(), "data");
 const databasePath = path.join(dataDirectory, "db.json");
 const temporaryPath = path.join(dataDirectory, "db.tmp.json");
 let writeQueue: Promise<void> = Promise.resolve();
+const isFirestoreBackend=()=>process.env.ROAMLY_DB_BACKEND?.toLowerCase()==="firestore";
 
 export function emptyDatabase(): Database {
   return { users:[], trips:[], participants:[], listings:[], amenities:[], listingAmenities:[], votes:[], comments:[], preferences:[], participantPreferences:[] };
 }
 
 function normalizeDatabase(value:Partial<Database>):Database {
-  return { ...emptyDatabase(), ...value, users:value.users ?? [], trips:(value.trips ?? []).map((trip) => ({ ...trip, creatorUserId:trip.creatorUserId ?? null, creatorTokenHash:trip.creatorTokenHash ?? "", status:trip.status ?? "ACTIVE", completedAt:trip.completedAt ?? null })) };
+  return { ...emptyDatabase(), ...value, users:value.users ?? [], preferences:value.preferences?.length?value.preferences:defaultPreferences(), participants:(value.participants??[]).map((participant)=>({...participant,userId:participant.userId??null})), votes:(value.votes??[]).map((vote)=>({...vote,round:vote.round??1})), trips:(value.trips ?? []).map((trip) => ({ ...trip, creatorUserId:trip.creatorUserId ?? null, creatorTokenHash:trip.creatorTokenHash ?? "", status:trip.status ?? "ACTIVE", completedAt:trip.completedAt ?? null, votingMode:trip.votingMode??"AUTO", votingState:trip.votingState??"ROUND_1_OPEN", votingDeadline:trip.votingDeadline??null, finalistListingIds:trip.finalistListingIds??[] })) };
 }
 
 const requiredRecordFields:Record<keyof Database,readonly string[]>={
@@ -46,6 +49,7 @@ export function parseDatabaseDocument(value:unknown):Database {
 }
 
 export async function readDatabase(): Promise<Database> {
+  if(isFirestoreBackend())return readFirestoreDatabase(parseDatabaseDocument,emptyDatabase);
   try {
     return parseDatabaseDocument(JSON.parse(await readFile(databasePath, "utf8")));
   } catch (error) {
@@ -55,6 +59,7 @@ export async function readDatabase(): Promise<Database> {
 }
 
 export function writeDatabase(database: Database): Promise<void> {
+  if(isFirestoreBackend())return writeFirestoreDatabase(database);
   const write = async () => {
     await mkdir(dataDirectory, { recursive:true });
     await writeFile(temporaryPath, `${JSON.stringify(database, null, 2)}\n`, "utf8");
@@ -65,6 +70,7 @@ export function writeDatabase(database: Database): Promise<void> {
 }
 
 export async function updateDatabase<T>(mutation: (database: Database) => T | Promise<T>): Promise<T> {
+  if(isFirestoreBackend())return updateFirestoreDatabase(parseDatabaseDocument,emptyDatabase,mutation);
   let result!: T;
   const update = async () => {
     const database = await readDatabase();
