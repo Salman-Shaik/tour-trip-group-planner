@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Database } from "@/lib/types";
 
 const mocks = vi.hoisted(() => ({
-  collectionGet: vi.fn(), legacyGet: vi.fn(), listDocuments: vi.fn(),
+  collectionGet: vi.fn(), legacyGet: vi.fn(), legacySet: vi.fn(), listDocuments: vi.fn(),
   writerSet: vi.fn(), writerDelete: vi.fn(), writerClose: vi.fn(),
   transactionGet: vi.fn(), transactionSet: vi.fn(), transactionDelete: vi.fn(),
   runTransaction: vi.fn(), entityDoc: vi.fn(),
@@ -14,6 +14,7 @@ vi.mock("@google-cloud/firestore", () => ({
       return { doc: () => ({
         _kind: "legacy",
         get: mocks.legacyGet,
+        set: mocks.legacySet,
         collection: (key: string) => ({
           _kind: "collection",
           _key: key,
@@ -61,12 +62,20 @@ describe("Firestore database adapter", () => {
     expect(await readFirestoreDatabase(parse, empty)).toBe(database);
   });
 
+  it("treats an explicit current-schema marker as authoritative when collections are empty", async () => {
+    mocks.legacyGet.mockResolvedValue({ exists:true, data:() => ({ schemaVersion:2, trips:[{ id:"stale" }] }) });
+    const result = await readFirestoreDatabase(parse, empty);
+    expect(result.trips).toEqual([]);
+    expect(parse).toHaveBeenCalledWith(expect.objectContaining({ trips:[] }));
+  });
+
   it("writes records as separate entity documents", async () => {
     const database = empty();
     database.comments.push(comment);
     await writeFirestoreDatabase(database);
     expect(mocks.writerSet).toHaveBeenCalledWith({ id: "c" }, comment);
     expect(mocks.writerClose).toHaveBeenCalled();
+    expect(mocks.legacySet).toHaveBeenCalledWith({ schemaVersion:2 });
   });
 
   it("uses deterministic IDs for relationship records", async () => {
@@ -90,6 +99,12 @@ describe("Firestore database adapter", () => {
     expect(mocks.writerDelete).toHaveBeenCalledWith({ id:"stale" });
   });
 
+  it("does not replace legacy data when an entity write fails", async () => {
+    mocks.writerClose.mockRejectedValueOnce(new Error("write failed"));
+    await expect(writeFirestoreDatabase(empty())).rejects.toThrow("write failed");
+    expect(mocks.legacySet).not.toHaveBeenCalled();
+  });
+
   it("writes only changed records in a transaction", async () => {
     const result = await updateFirestoreDatabase(parse, empty, (database) => { database.comments.push(comment); return "done"; });
     expect(result).toBe("done");
@@ -107,7 +122,7 @@ describe("Firestore database adapter", () => {
   it("does not rewrite an unchanged record", async () => {
     mocks.transactionGet.mockImplementation(async (reference: { _kind?: string; _key?: string }) => reference._kind === "collection"
       ? { docs: reference._key === "comments" ? [{ data: () => comment }] : [] }
-      : { exists: false, data: () => undefined });
+      : { exists: true, data: () => ({ schemaVersion:2 }) });
     await updateFirestoreDatabase(parse, empty, () => undefined);
     expect(mocks.transactionSet).not.toHaveBeenCalled();
     expect(mocks.transactionDelete).not.toHaveBeenCalled();

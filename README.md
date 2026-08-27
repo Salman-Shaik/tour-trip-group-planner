@@ -146,7 +146,7 @@ Firebase App Hosting is **not guaranteed to be completely free**. It requires th
 
 Firestore itself includes daily no-cost quotas (subject to the current Firebase pricing terms), but reads and writes beyond those quotas are billed on Blaze. This adapter currently loads the trip data collections for each server operation to preserve the existing application behavior; it is appropriate for the current small-group MVP, but high traffic should move to query-specific repositories before scale.
 
-Firebase Analytics is enabled only after a visitor accepts the in-app analytics prompt. Its public web-app configuration is supplied at build time by `apphosting.yaml`; no Firebase administrator credential is sent to the browser. Roamly records page views only and does not send trip details, votes, participant names, or listing data as custom analytics events. Visitors can reopen **Analytics settings** from the lower-left corner.
+Firebase Analytics is enabled only after a visitor accepts the in-app analytics prompt. Add the seven `NEXT_PUBLIC_FIREBASE_*` values listed in `.env.example` to **App Hosting → backend → Settings → Environment** with build availability, using the web-app configuration shown in Firebase Project Settings. They are public browser identifiers, but keeping project-specific values out of Git avoids secret-scanner alerts and makes environments independently configurable. No Firebase administrator credential is sent to the browser. Roamly records page views only and does not send trip details, votes, participant names, or listing data as custom analytics events. Visitors can reopen **Analytics settings** from the lower-left corner.
 
 ## Cloud Run deployment
 

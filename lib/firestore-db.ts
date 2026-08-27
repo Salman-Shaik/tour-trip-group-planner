@@ -13,6 +13,8 @@ let client: Firestore | undefined;
 const firestore = () => client ??= new Firestore(process.env.GOOGLE_CLOUD_PROJECT ? { projectId: process.env.GOOGLE_CLOUD_PROJECT } : undefined);
 const namespace = () => firestore().collection(process.env.ROAMLY_FIRESTORE_COLLECTION?.trim() || "roamly_internal").doc("database");
 const entityCollection = (key: DatabaseKey) => namespace().collection(key);
+const schemaMarker = { schemaVersion:2 } as const;
+const isCurrentSchema = (value: DocumentData | undefined) => value?.schemaVersion === schemaMarker.schemaVersion;
 
 function recordId(key: DatabaseKey, value: DatabaseRecord): string {
   const record = value as unknown as Record<string, string>;
@@ -28,12 +30,14 @@ async function readCollections(get: (key: DatabaseKey) => Promise<{ docs: Array<
 }
 
 export async function readFirestoreDatabase(parse: (value: unknown) => Database, empty: () => Database) {
-  const value = await readCollections((key) => entityCollection(key).get());
-  if (databaseKeys.some((key) => value[key]?.length)) return parse(value);
+  const [value, root] = await Promise.all([
+    readCollections((key) => entityCollection(key).get()),
+    namespace().get(),
+  ]);
+  if (isCurrentSchema(root.data()) || databaseKeys.some((key) => value[key]?.length)) return parse(value);
 
   // Compatibility with the original adapter, which stored all arrays in one document.
-  const legacy = await namespace().get();
-  return legacy.exists ? parse(legacy.data()) : empty();
+  return root.exists ? parse(root.data()) : empty();
 }
 
 export async function writeFirestoreDatabase(database: Database) {
@@ -45,6 +49,9 @@ export async function writeFirestoreDatabase(database: Database) {
     for (const record of database[key]) writer.set(entityCollection(key).doc(recordId(key, record)), record);
   }
   await writer.close();
+  // Only after every entity write succeeds, overwrite any legacy all-in-one
+  // document and mark even an empty collection dataset as authoritative.
+  await namespace().set(schemaMarker);
 }
 
 function documentsById(key: DatabaseKey, records: Database[DatabaseKey]) {
@@ -58,12 +65,10 @@ export async function updateFirestoreDatabase<T>(
 ) {
   return firestore().runTransaction(async (transaction: Transaction) => {
     const originalValue = await readCollections((key) => transaction.get(entityCollection(key)));
+    const root = await transaction.get(namespace());
     let database: Database;
-    if (databaseKeys.some((key) => originalValue[key]?.length)) database = parse(originalValue);
-    else {
-      const legacy = await transaction.get(namespace());
-      database = legacy.exists ? parse(legacy.data()) : empty();
-    }
+    if (isCurrentSchema(root.data()) || databaseKeys.some((key) => originalValue[key]?.length)) database = parse(originalValue);
+    else database = root.exists ? parse(root.data()) : empty();
 
     const original = structuredClone(database);
     const result = await mutation(database);
@@ -75,6 +80,7 @@ export async function updateFirestoreDatabase<T>(
       }
       for (const id of before.keys()) if (!after.has(id)) transaction.delete(entityCollection(key).doc(id));
     }
+    if (!isCurrentSchema(root.data())) transaction.set(namespace(), schemaMarker);
     return result;
   });
 }

@@ -49,4 +49,4 @@ jobs:
           --platform managed
           --allow-unauthenticated
           --max-instances 2
-          --set-env-vars "ROAMLY_DB_BACKEND=firestore,GOOGLE_CLOUD_PROJECT=${PROJECT_ID}"
+          --update-env-vars "ROAMLY_DB_BACKEND=firestore,GOOGLE_CLOUD_PROJECT=${PROJECT_ID}"

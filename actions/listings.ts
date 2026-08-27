@@ -84,7 +84,7 @@ export async function deleteListing(inviteCode:string, listingId:string) {
 }
 
 export async function reuseListing(inviteCode:string,sourceListingId:string){
-  const trip=await creatorTrip(inviteCode);if(!trip)return;const now=new Date().toISOString();
-  await updateDatabase((database)=>{const source=database.listings.find((item)=>item.id===sourceListingId);const sourceTrip=source&&database.trips.find((item)=>item.id===source.tripId);if(!source||!sourceTrip||sourceTrip.creatorUserId!==trip.creatorUserId||sourceTrip.id===trip.id||sourceTrip.selectedListingId===source.id)return;const listingId=randomUUID();database.listings.push({...source,id:listingId,tripId:trip.id,createdAt:now,updatedAt:now});const amenityIds=database.listingAmenities.filter((item)=>item.listingId===source.id).map((item)=>item.amenityId);database.listingAmenities.push(...amenityIds.map((amenityId)=>({listingId,amenityId})));});
+  const trip=await creatorTrip(inviteCode);if(!trip?.creatorUserId)return;const now=new Date().toISOString();
+  await updateDatabase((database)=>{const source=database.listings.find((item)=>item.id===sourceListingId);const sourceTrip=source&&database.trips.find((item)=>item.id===source.tripId);if(!source||!sourceTrip?.creatorUserId||sourceTrip.creatorUserId!==trip.creatorUserId||sourceTrip.id===trip.id||sourceTrip.selectedListingId===source.id)return;const listingId=randomUUID();database.listings.push({...source,id:listingId,tripId:trip.id,createdAt:now,updatedAt:now});const amenityIds=database.listingAmenities.filter((item)=>item.listingId===source.id).map((item)=>item.amenityId);database.listingAmenities.push(...amenityIds.map((amenityId)=>({listingId,amenityId})));});
   revalidatePath(`/trip/${inviteCode}`);redirect(`/trip/${inviteCode}`);
 }
