@@ -11,11 +11,11 @@ let writeQueue: Promise<void> = Promise.resolve();
 const isFirestoreBackend=()=>process.env.ROAMLY_DB_BACKEND?.toLowerCase()==="firestore";
 
 export function emptyDatabase(): Database {
-  return { users:[], trips:[], participants:[], listings:[], amenities:[], listingAmenities:[], votes:[], comments:[], preferences:[], participantPreferences:[] };
+  return { users:[], trips:[], participants:[], listings:[], amenities:[], listingAmenities:[], votes:[], comments:[], preferences:[], participantPreferences:[], activityEvents:[] };
 }
 
 function normalizeDatabase(value:Partial<Database>):Database {
-  return { ...emptyDatabase(), ...value, users:value.users ?? [], preferences:value.preferences?.length?value.preferences:defaultPreferences(), participants:(value.participants??[]).map((participant)=>({...participant,userId:participant.userId??null})), votes:(value.votes??[]).map((vote)=>({...vote,round:vote.round??1})), trips:(value.trips ?? []).map((trip) => ({ ...trip, creatorUserId:trip.creatorUserId ?? null, creatorTokenHash:trip.creatorTokenHash ?? "", status:trip.status ?? "ACTIVE", completedAt:trip.completedAt ?? null, votingMode:trip.votingMode??"AUTO", votingState:trip.votingState??"ROUND_1_OPEN", votingDeadline:trip.votingDeadline??null, finalistListingIds:trip.finalistListingIds??[] })) };
+  return { ...emptyDatabase(), ...value, users:value.users ?? [], activityEvents:value.activityEvents??[], preferences:value.preferences?.length?value.preferences:defaultPreferences(), participants:(value.participants??[]).map((participant)=>({...participant,userId:participant.userId??null})), votes:(value.votes??[]).map((vote)=>({...vote,round:vote.round??1})), trips:(value.trips ?? []).map((trip) => ({ ...trip, creatorUserId:trip.creatorUserId ?? null, creatorTokenHash:trip.creatorTokenHash ?? "", status:trip.status ?? "ACTIVE", completedAt:trip.completedAt ?? null, cancelledAt:trip.cancelledAt??null, cancellationReason:trip.cancellationReason??null, votingMode:trip.votingMode??"AUTO", votingState:trip.votingState??"ROUND_1_OPEN", votingDeadline:trip.votingDeadline??null, finalistListingIds:trip.finalistListingIds??[] })) };
 }
 
 const requiredRecordFields:Record<keyof Database,readonly string[]>={
@@ -29,6 +29,7 @@ const requiredRecordFields:Record<keyof Database,readonly string[]>={
   comments:["id","participantId","listingId","body","createdAt","updatedAt"],
   preferences:["id","key","label","description","createdAt"],
   participantPreferences:["participantId","preferenceId","importance","createdAt","updatedAt"],
+  activityEvents:["id","userId","tripId","type","createdAt"],
 };
 
 export function parseDatabaseDocument(value:unknown):Database {

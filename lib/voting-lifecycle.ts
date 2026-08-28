@@ -8,7 +8,7 @@ export function effectiveVotingState(trip:Trip,now=new Date()):VotingState{
 }
 
 export function currentVotingRound(trip:Trip,now=new Date()):1|2{return effectiveVotingState(trip,now).startsWith("ROUND_2")?2:1;}
-export function isVotingOpen(trip:Trip,now=new Date()){return effectiveVotingState(trip,now).endsWith("_OPEN");}
+export function isVotingOpen(trip:Trip,now=new Date()){return trip.status==="ACTIVE"&&effectiveVotingState(trip,now).endsWith("_OPEN");}
 export function usesSecondRound(trip:Trip,listingCount:number){return trip.votingMode==="TWO_ROUND"||(trip.votingMode!=="SINGLE"&&listingCount>5);}
 export function finalistCount(listingCount:number){return listingCount>10?5:3;}
 

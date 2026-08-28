@@ -40,6 +40,7 @@ async function main() {
       {participantId:"participant_3",preferenceId:"preference_4",importance:"IMPORTANT",createdAt:now,updatedAt:now},
       {participantId:"participant_4",preferenceId:"preference_8",importance:"NICE_TO_HAVE",createdAt:now,updatedAt:now},
     ],
+    activityEvents:[],
   };
   await writeDatabase(database);
   console.log("Seeded Goa December Trip in data/db.json");
