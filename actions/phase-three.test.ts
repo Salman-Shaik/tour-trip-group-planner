@@ -61,6 +61,12 @@ describe("phase three server actions",()=>{
     expect(mocks.database!.trips[0]).toMatchObject({status:"ACTIVE",cancelledAt:null,cancellationReason:null});
   });
 
+  it("does not allow a completed trip to be cancelled",async()=>{
+    mocks.database!.trips[0]=trip({status:"COMPLETED",completedAt:"2026-12-04T00:00:00.000Z"});const before={...mocks.database!.trips[0]};
+    const form=new FormData();form.set("reason","Changed our minds");await setTripCancelled("goa",true,form);
+    expect(mocks.database!.trips[0]).toEqual(before);expect(mocks.database!.activityEvents).toEqual([]);
+  });
+
   it("rejects result selection and voting changes while a trip is cancelled",async()=>{
     mocks.database!.trips[0]=trip({status:"CANCELLED",votingState:"ROUND_1_LOCKED"});
     mocks.database!.listings.push({id:"stay",tripId:"trip-1",url:"https://example.com",platform:"OTHER",propertyName:"Stay",imageUrl:null,totalPrice:100,currency:"INR",maxGuests:1,bedrooms:null,beds:null,bathrooms:null,rating:null,reviewCount:null,location:"Goa",distanceNote:null,notes:null,tags:[],createdAt:"",updatedAt:""});

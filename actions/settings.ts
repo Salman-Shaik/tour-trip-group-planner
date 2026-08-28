@@ -29,7 +29,7 @@ export async function setTripCancelled(inviteCode:string,cancelled:boolean,formD
   const trip=(await readDatabase()).trips.find((item)=>item.inviteCode===inviteCode);
   if(!trip||!(await isTripCreator(trip)))return;
   const reason=cancelled?String(formData?.get("reason")??"").trim().slice(0,500)||null:null;
-  await updateDatabase((database)=>{const target=database.trips.find((item)=>item.id===trip.id);if(!target)return;const now=new Date().toISOString();target.status=cancelled?"CANCELLED":"ACTIVE";target.cancelledAt=cancelled?now:null;target.cancellationReason=reason;target.completedAt=null;target.updatedAt=now;if(cancelled&&target.creatorUserId&&!database.activityEvents.some((item)=>item.userId===target.creatorUserId&&item.tripId===target.id&&item.type==="TRIP_CANCELLED"))database.activityEvents.push({id:randomUUID(),userId:target.creatorUserId,tripId:target.id,type:"TRIP_CANCELLED",createdAt:now});});
+  await updateDatabase((database)=>{const target=database.trips.find((item)=>item.id===trip.id);if(!target||cancelled&&target.status==="COMPLETED")return;const now=new Date().toISOString();target.status=cancelled?"CANCELLED":"ACTIVE";target.cancelledAt=cancelled?now:null;target.cancellationReason=reason;target.completedAt=null;target.updatedAt=now;if(cancelled&&target.creatorUserId&&!database.activityEvents.some((item)=>item.userId===target.creatorUserId&&item.tripId===target.id&&item.type==="TRIP_CANCELLED"))database.activityEvents.push({id:randomUUID(),userId:target.creatorUserId,tripId:target.id,type:"TRIP_CANCELLED",createdAt:now});});
   revalidatePath("/");revalidatePath("/trips");revalidatePath(`/trip/${inviteCode}`);revalidatePath(`/trip/${inviteCode}/settings`);
 }
 
