@@ -1,7 +1,10 @@
 import { expect,test } from "@playwright/test";
+import { resetTestDatabase } from "./reset-database";
 
 const inviteCode="goa-december-x7k29";
 const email="returning-traveller@example.test";
+
+test.beforeEach(()=>resetTestDatabase());
 
 async function testLogin(page:import("@playwright/test").Page){await page.goto("/login");const decline=page.getByRole("button",{name:"Decline"});await decline.waitFor({state:"visible",timeout:3_000}).then(()=>decline.click()).catch(()=>undefined);await page.getByLabel("Name").fill("Returning Traveller");await page.getByLabel("Email").fill(email);await page.getByRole("button",{name:"Sign in as test account"}).click();await expect(page).toHaveURL(/\/$/);}
 
