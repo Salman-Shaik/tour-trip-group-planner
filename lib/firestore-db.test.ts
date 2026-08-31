@@ -31,7 +31,7 @@ vi.mock("@google-cloud/firestore", () => ({
 
 import { readFirestoreDatabase, updateFirestoreDatabase, writeFirestoreDatabase } from "@/lib/firestore-db";
 
-const empty = (): Database => ({ users: [], trips: [], participants: [], listings: [], amenities: [], listingAmenities: [], votes: [], comments: [], preferences: [], participantPreferences: [] });
+const empty = (): Database => ({ users: [], trips: [], participants: [], listings: [], amenities: [], listingAmenities: [], votes: [], comments: [], preferences: [], participantPreferences: [], activityEvents:[] });
 const parse = vi.fn((value: unknown) => value as Database);
 const comment = { id: "c", participantId: "p", listingId: "l", body: "Hi", createdAt: "", updatedAt: "" };
 

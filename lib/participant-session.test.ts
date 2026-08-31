@@ -9,7 +9,7 @@ import { createParticipantToken,getCurrentParticipant,setParticipantSession } fr
 
 const trip={id:"trip",inviteCode:"trip",name:"Trip",destination:"Goa",startDate:"2026-01-01",endDate:"2026-01-02",travellerCount:2,accommodationBudget:null,currency:"INR",creatorUserId:null,creatorTokenHash:"",status:"ACTIVE",completedAt:null,selectedListingId:null,createdAt:"",updatedAt:""} satisfies Trip;
 const participant:Participant={id:"p",tripId:"trip",name:"Pavani",sessionHash:hashToken("token"),userId:null,createdAt:"",updatedAt:""};
-const database={users:[],trips:[trip],participants:[participant],listings:[],amenities:[],listingAmenities:[],votes:[],comments:[],preferences:[],participantPreferences:[]} satisfies Database;
+const database={users:[],trips:[trip],participants:[participant],listings:[],amenities:[],listingAmenities:[],votes:[],comments:[],preferences:[],participantPreferences:[],activityEvents:[]} satisfies Database;
 
 describe("participant sessions",()=>{
   beforeEach(()=>{vi.clearAllMocks();mocks.auth.mockResolvedValue(null)});

@@ -1,8 +1,11 @@
 import { expect,test } from "@playwright/test";
+import { resetTestDatabase } from "./reset-database";
 
 const inviteCode="goa-december-x7k29";
 const stays=["Casa Sol","The Palm House","Salt & Sky Villa","Mango Grove Retreat"];
 const voteLabels=["Love","Like","Maybe","No"] as const;
+
+test.beforeEach(()=>resetTestDatabase());
 
 function seededRandom(seed:number){
   let state=seed>>>0;

@@ -6,7 +6,7 @@ type DatabaseRecord = Database[DatabaseKey][number];
 
 const databaseKeys: DatabaseKey[] = [
   "users", "trips", "participants", "listings", "amenities",
-  "listingAmenities", "votes", "comments", "preferences", "participantPreferences",
+  "listingAmenities", "votes", "comments", "preferences", "participantPreferences", "activityEvents",
 ];
 
 let client: Firestore | undefined;
